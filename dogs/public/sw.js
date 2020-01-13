@@ -1,4 +1,4 @@
-const version = 4;
+const version = 2;
 
 self.addEventListener('fetch', (event) => {
     const url = event.request.url;
@@ -15,4 +15,15 @@ self.addEventListener('fetch', (event) => {
             });
         })
     )
+});
+
+self.addEventListener('message', (event) => {
+    console.log('sw: received message', event.data);
+
+    if (event.data === 'skipWaiting') {
+        console.log('sw: skipWaiting')
+        event.waitUntil(
+            self.skipWaiting()
+        )
+    }
 });
