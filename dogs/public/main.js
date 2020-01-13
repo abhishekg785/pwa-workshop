@@ -33,10 +33,11 @@ if ('serviceWorker' in navigator) {
 
         const sw = reg.installing || reg.waiting || reg.active;
 
-        // sw.postMessage('hello from main');
+        sw.postMessage('hello from main');
     });
 
     navigator.serviceWorker.ready.then(reg => {
+        console.log('main: service worker is ready');
         const sw = reg.installing || reg.waiting || reg.active;
         sw.postMessage('service worker is ready and working');
     });
@@ -44,6 +45,12 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('controllerchange', (reg) => {
         console.log('main: controller change event', reg);
     });
+
+    if (navigator.serviceWorker.controller) {
+        console.log('main: current service worker', navigator.serviceWorker.controller);
+
+        navigator.serviceWorker.controller.postMessage('Hello from main using serviceWorker.controller');
+    }
 
     navigator.serviceWorker.addEventListener('message', (event) => {
         console.log('main: message received from sw:', event.data);
