@@ -1,4 +1,4 @@
-const version = 1;
+const version = 4;
 
 self.addEventListener('fetch', (event) => {
     const url = event.request.url;
