@@ -10,3 +10,11 @@
     const app = d.getElementById('app');
     app.innerHTML = html;
 })(document, window);
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('service worker registered', reg);
+
+        const sw = reg.installing || reg.waiting || reg.active;
+    });
+}
