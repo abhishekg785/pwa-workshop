@@ -1,4 +1,4 @@
-const version = 4;
+const version = 5;
 
 const assetsToCache = [
     '/',
@@ -18,8 +18,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    console.log(`sw: fetch: ${event.request.url}`, event.request);
+    console.log(`sw: fetch: ${event.request.url}`);
     const url = new URL(event.request.url);
+
+    if (url.hostname === 'dog.ceo') {
+        event.respondWith(
+            handleDogsData(event.request)
+        )
+    }
 
     if ((url.hostname === location.hostname) && event.request.method === 'GET') {
         event.respondWith(
@@ -65,5 +71,37 @@ async function handleSameOriginRequest(request) {
     } else {
         console.log(`sw: handleSameOriginRequest: no data found from cache for ${requestUrl}`);
         return new Response('no-match');
+    }
+}
+
+async function handleDogsData(request) {
+    try {
+        console.log(`sw: handleDogsData: fetching request for ${request.url}`);
+
+        const response = await fetch(request);
+
+        console.log(`sw: handleDogsData: caching dog data`);
+        const dogsDataCache = await caches.open('dogs-pwa-data');
+        await dogsDataCache.put(request, response.clone());
+        console.log(`sw: handleDogsData: dog data cached success`);
+
+        return response;
+    } catch (err) {
+        console.log(`sw: handleDogsData: error while fetching request for ${request.url}`);
+
+        console.log('sw: handleDogsData: getting dog data from cache');
+        const response = await caches.match(request);
+
+        if (response) {
+            console.log('sw: handleDogsData: found dog data in cache');
+            return response;
+        } else {
+            console.log('sw: handleDogsData: no dog data found in cache');
+            return new Response(JSON.stringify({ status: 'no-cache'}), {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+        }
     }
 }
