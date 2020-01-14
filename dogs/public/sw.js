@@ -1,8 +1,10 @@
-const version = 5;
+const version = 7;
 
 const assetsToCache = [
     '/',
     '/main.js',
+    '/manifest.json',
+    '/icons/icon_512.png',
 ];
 
 const expectedCaches = [
