@@ -1,29 +1,22 @@
 const version = 2;
 
 self.addEventListener('fetch', (event) => {
-    const url = event.request.url;
-
     event.respondWith(
-        fetch(event.request)
-        .catch(err => {
-            console.log('sw: error occurred while fetch', event.request.url);
-
-            return new Response('<b>You seem to be offline</b>', {
-                headers: {
-                    'Content-Type': 'text/html',
-                },
-            });
-        })
+        handleRequest(event.request)
     )
 });
 
-self.addEventListener('message', (event) => {
-    console.log('sw: received message', event.data);
+async function handleRequest(request) {
+    try {
+        const response = await fetch(request);
 
-    if (event.data === 'skipWaiting') {
-        console.log('sw: skipWaiting')
-        event.waitUntil(
-            self.skipWaiting()
-        )
+        const cache = await caches.open('dogs-pwa');
+        await cache.put(request, response.clone());
+
+        return response;
+    } catch (err) {
+        const response = await caches.match(request);
+
+        return response;
     }
-});
+}
