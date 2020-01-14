@@ -27,6 +27,12 @@ self.addEventListener('fetch', (event) => {
         )
     }
 
+    if (url.hostname === 'images.dog.ceo') {
+        event.respondWith(
+            handleDogImages(event.request)
+        )
+    }
+
     if ((url.hostname === location.hostname) && event.request.method === 'GET') {
         event.respondWith(
             handleSameOriginRequest(event.request)
@@ -42,16 +48,20 @@ async function precache() {
     console.log('sw: precache: static assets  cached');
 }
 
+const expectedCaches = [
+    `dogs-pwa-static-assets-${version}`,
+    'dogs-pwa-data',
+    'dogs-pwa-images',
+];
+
 async function cleanCache() {
     console.log('sw: cleanCache: cleaning unused cache');
     const cacheKeys = await caches.keys();
 
     await Promise.all(
         cacheKeys.filter(cacheName => {
-            if (/dogs-pwa/.test(cacheName)) {
-                if (cacheName !== `dogs-pwa-static-assets-${version}`) {
-                    return caches.delete(cacheName);
-                }
+            if (/dogs-pwa/.test(cacheName) && expectedCaches.indexOf(cacheName) === -1) {
+                return caches.delete(cacheName);
             }
         })
     )
@@ -74,6 +84,7 @@ async function handleSameOriginRequest(request) {
     }
 }
 
+// network first
 async function handleDogsData(request) {
     try {
         console.log(`sw: handleDogsData: fetching request for ${request.url}`);
@@ -104,4 +115,25 @@ async function handleDogsData(request) {
             });
         }
     }
+}
+
+// cache first
+async function handleDogImages(request) {
+    console.log(`sw: handleDogImages: getting image from cache for ${request.url}`);
+    const cacheResponse = await caches.match(request);
+
+    if (cacheResponse) {
+        console.log(`sw: handleDogImages: found image in cache for ${request.url}`);
+        return cacheResponse;
+    }
+
+    console.log(`sw: handleDogImages: no image found in cache for ${request.url}`);
+    console.log(`sw: handleDogImages: fetching image for ${request.url}`);
+    const response = await fetch(request);
+    const dogImagesCache = await caches.open('dogs-pwa-images');
+    console.log(`sw: handleDogImages: putting image in cache for ${request.url}`);
+    await dogImagesCache.put(request, response.clone());
+    console.log(`sw: handleDogImages: image cached success for ${request.url}`);
+
+    return response;
 }
