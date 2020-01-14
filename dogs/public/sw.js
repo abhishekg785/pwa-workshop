@@ -5,6 +5,12 @@ const assetsToCache = [
     '/main.js',
 ];
 
+const expectedCaches = [
+    `dogs-pwa-static-assets-${version}`,
+    'dogs-pwa-data',
+    'dogs-pwa-images',
+];
+
 self.addEventListener('install', (event) => {
     event.waitUntil(
         precache()
@@ -48,12 +54,6 @@ async function precache() {
     console.log('sw: precache: static assets  cached');
 }
 
-const expectedCaches = [
-    `dogs-pwa-static-assets-${version}`,
-    'dogs-pwa-data',
-    'dogs-pwa-images',
-];
-
 async function cleanCache() {
     console.log('sw: cleanCache: cleaning unused cache');
     const cacheKeys = await caches.keys();
@@ -93,6 +93,22 @@ async function handleDogsData(request) {
 
         console.log(`sw: handleDogsData: caching dog data`);
         const dogsDataCache = await caches.open('dogs-pwa-data');
+
+        const { message: dogImageData } = await response.clone().json();
+
+        console.log('sw: handleDogsData: deleting not needed dog image cache');
+        const dogImagesCache = await caches.open('dogs-pwa-images');
+        const dogImageCacheKeys = await dogImagesCache.keys();
+
+        await Promise.all([
+            dogImageCacheKeys.filter(imageCacheKey => {
+                if (dogImageData.indexOf(imageCacheKey) === -1) {
+                    return dogImagesCache.delete(imageCacheKey);
+                }
+            })
+        ]);
+        console.log('sw: handleDogsData: not needed dog image cache deletion success');
+
         await dogsDataCache.put(request, response.clone());
         console.log(`sw: handleDogsData: dog data cached success`);
 
