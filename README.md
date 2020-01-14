@@ -1,4 +1,12 @@
 ### dogs-insta ( A basic PWA )
+fetch and show dog Images
+
+What does it do ?
+
+    PWA, can be installed and work offline
+
+    Use caches api, to store static assets.
+
 
 Steps to run:
 - `npm install`
